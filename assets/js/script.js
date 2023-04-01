@@ -38,27 +38,59 @@ function startQuiz() {
 }
 
 function updateTimer() {
-    timeLeft--;
-    timerElement.textContent = timeLeft;
-    if (timeLeft <= 0) {
-        endQuiz();
-    }
+  timeLeft--;
+  timerElement.textContent = timeLeft;
+  if (timeLeft <= 0) {
+    endQuiz();
+  }
+}
+
+function showNextQuestion() {
+  if (currentQuestionIndex >= questions.length) {
+    endQuiz();
+    return;
+  }
+
+  const question = questions[currentQuestionIndex];
+  questionText.textContent = question.question;
+  answerButtons.innerHTML = "";
+  question.answers.forEach((answer, index) => {
+    const button = document.createElement("button");
+    button.textContent = answer.text;
+    button.dataset.correct = answer.correct;
+    button.addEventListener("click", selectAnswer);
+    answerButtons.appendChild(button);
+  });
+}
+
+function selectAnswer(e) {
+    const selectedButton = e.target;
+    const correct = selectedButton.dataset.correct === 'true';
+    
+    if (!correct) {
+        timeLeft = Math.max(timeLeft - 10, 0);
+        timerElement.textContent = timeLeft;
     }
     
-    function showNextQuestion() {
-    if (currentQuestionIndex >= questions.length) {
-        endQuiz();
-        return;
+    currentQuestionIndex++;
+    showNextQuestion();
     }
     
-    const question = questions[currentQuestionIndex];
-    questionText.textContent = question.question;
-    answerButtons.innerHTML = '';
-    question.answers.forEach((answer, index) => {
-        const button = document.createElement('button');
-        button.textContent = answer.text;
-        button.dataset.correct = answer.correct;
-        button.addEventListener('click', selectAnswer);
-        answerButtons.appendChild(button);
+    function endQuiz() {
+    clearInterval(timer);
+    questionContainer.classList.add('hidden');
+    scoreContainer.classList.remove('hidden');
+    finalScore.textContent = score;
+    }
+    
+    highscoreForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const initials = initialsInput.value;
+    const highscores = JSON.parse(localStorage.getItem('highscores')) || [];
+    const newHighscore = { initials, score };
+    highscores.push(newHighscore);
+    highscores.sort((a, b) => b.score - a.score);
+    highscores.splice(5);
+    localStorage.setItem('highscores', JSON.stringify(highscores));
+    window.location.href = 'highscores.html';
     });
-    }
